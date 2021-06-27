@@ -170,6 +170,7 @@
 <p>Please choose from the chapters on the left to jump to individual topics, or continue below to start with PyO3's README.</p>
 <h1 id="pyo3"><a class="header" href="#pyo3">PyO3</a></h1>
 <p><a href="https://github.com/PyO3/pyo3/actions"><img src="https://github.com/PyO3/pyo3/workflows/CI/badge.svg" alt="actions status" /></a>
+<a href="https://pyo3.rs/dev/bench/"><img src="https://github.com/PyO3/pyo3/actions/workflows/bench.yml/badge.svg" alt="benchmark" /></a>
 <a href="https://codecov.io/gh/PyO3/pyo3"><img src="https://codecov.io/gh/PyO3/pyo3/branch/main/graph/badge.svg" alt="codecov" /></a>
 <a href="https://crates.io/crates/pyo3"><img src="https://meritbadge.herokuapp.com/pyo3" alt="crates.io" /></a>
 <a href="https://rust-lang.github.io/rfcs/2495-min-rust-version.html"><img src="https://img.shields.io/badge/rustc-1.41+-blue.svg" alt="minimum rustc 1.41" /></a>
@@ -217,7 +218,6 @@ features = [&quot;extension-module&quot;]
 <span class="boring">#![allow(unused)]
 </span><span class="boring">fn main() {
 </span>use pyo3::prelude::*;
-use pyo3::wrap_pyfunction;
 
 /// Formats the sum of two numbers as string.
 #[pyfunction]
@@ -306,6 +306,7 @@ about this topic.</p>
 <li><a href="https://github.com/Stranger6667/css-inline/tree/master/bindings/python">css-inline</a> <em>CSS inlining for Python implemented in Rust</em></li>
 <li><a href="https://github.com/pyca/cryptography/tree/main/src/rust">cryptography</a> <em>Python cryptography library with some functionality in Rust</em></li>
 <li><a href="https://github.com/daggy1234/polaroid">polaroid</a> <em>Hyper Fast and safe image manipulation library for Python written in Rust</em></li>
+<li><a href="https://github.com/aviramha/ormsgpack">ormsgpack</a> <em>Fast Python msgpack library</em></li>
 </ul>
 <h2 id="contributing"><a class="header" href="#contributing">Contributing</a></h2>
 <p>Everyone is welcomed to contribute to PyO3! There are many ways to support the project, such as:</p>
@@ -360,9 +361,12 @@ or <code>.pyd</code> file; the default is the Rust function's name.</p>
 <p>If the name of the module (the default being the function name) does not match the name of the <code>.so</code> or
 <code>.pyd</code> file, you will get an import error in Python with the following message:
 <code>ImportError: dynamic module does not define module export function (PyInit_name_of_your_module)</code></p>
-<p>To import the module, either copy the shared library as described in <a href="https://github.com/PyO3/pyo3">the README</a>
-or use a tool, e.g. <code>maturin develop</code> with <a href="https://github.com/PyO3/maturin">maturin</a> or
-<code>python setup.py develop</code> with <a href="https://github.com/PyO3/setuptools-rust">setuptools-rust</a>.</p>
+<p>To import the module, either:</p>
+<ul>
+<li>copy the shared library as described in <a href="building_and_distribution.html#manual-builds">Manual builds</a>, or</li>
+<li>use a tool, e.g. <code>maturin develop</code> with <a href="https://github.com/PyO3/maturin">maturin</a> or
+<code>python setup.py develop</code> with <a href="https://github.com/PyO3/setuptools-rust">setuptools-rust</a>.</li>
+</ul>
 <h2 id="documentation"><a class="header" href="#documentation">Documentation</a></h2>
 <p>The <a href="https://doc.rust-lang.org/stable/book/first-edition/comments.html">Rust doc comments</a> of the module
 initialization function will be applied automatically as the Python docstring of your module.</p>
@@ -378,7 +382,7 @@ dicts or other modules:</p>
 <span class="boring">#![allow(unused)]
 </span><span class="boring">fn main() {
 </span>use pyo3::prelude::*;
-use pyo3::{wrap_pyfunction, wrap_pymodule};
+use pyo3::wrap_pymodule;
 use pyo3::types::IntoPyDict;
 
 #[pyfunction]
@@ -413,7 +417,6 @@ fn supermodule(py: Python, module: &amp;PyModule) -&gt; PyResult&lt;()&gt; {
 <p>PyO3 supports two ways to define a free function in Python. Both require registering the function to a <a href="./module.html">module</a>.</p>
 <p>One way is annotating a function with <code>#[pyfunction]</code> and then adding it to the module using the <code>wrap_pyfunction!</code> macro.</p>
 <pre><pre class="playground"><code class="language-rust">use pyo3::prelude::*;
-use pyo3::wrap_pyfunction;
 
 #[pyfunction]
 fn double(x: usize) -&gt; usize {
@@ -455,7 +458,7 @@ fn rust2py(py: Python, m: &amp;PyModule) -&gt; PyResult&lt;()&gt; {
         Ok(format!(&quot;{}&quot;, a + b))
     }
 
-    m.add_function(pyo3::wrap_pyfunction!(sum_as_string, m)?)?;
+    m.add_function(wrap_pyfunction!(sum_as_string, m)?)?;
 
     Ok(())
 }
@@ -472,7 +475,6 @@ fn rust2py(py: Python, m: &amp;PyModule) -&gt; PyResult&lt;()&gt; {
 <span class="boring">#![allow(unused)]
 </span><span class="boring">fn main() {
 </span>use pyo3::prelude::*;
-use pyo3::wrap_pyfunction;
 
 #[pyfunction]
 #[pyo3(name = &quot;no_args&quot;)]
@@ -496,7 +498,6 @@ fn module_with_functions(py: Python, m: &amp;PyModule) -&gt; PyResult&lt;()&gt; 
 <h2 id="argument-parsing"><a class="header" href="#argument-parsing">Argument parsing</a></h2>
 <p>The <code>#[pyfunction]</code> attribute supports specifying details of argument parsing. The details are given in the section <a href="class.html#method-arguments">&quot;Method arguments&quot; of the Classes chapter</a>.  Here is an example for a function that accepts arbitrary keyword arguments (<code>**kwargs</code> in Python syntax) and returns the number that was passed:</p>
 <pre><pre class="playground"><code class="language-rust">use pyo3::prelude::*;
-use pyo3::wrap_pyfunction;
 use pyo3::types::PyDict;
 
 #[pyfunction(kwds=&quot;**&quot;)]
@@ -514,7 +515,7 @@ fn module_with_functions(py: Python, m: &amp;PyModule) -&gt; PyResult&lt;()&gt; 
 </span></code></pre></pre>
 <h2 id="making-the-function-signature-available-to-python"><a class="header" href="#making-the-function-signature-available-to-python">Making the function signature available to Python</a></h2>
 <p>In order to make the function signature available to Python to be retrieved via
-<code>inspect.signature</code>, use the <code>#[text_signature]</code> annotation as in the example
+<code>inspect.signature</code>, use the <code>#[pyo3(text_signature)]</code> annotation as in the example
 below. The <code>/</code> signifies the end of positional-only arguments. (This
 is not a feature of this library in particular, but the general format used by
 CPython for annotating signatures of built-in functions.)</p>
@@ -525,7 +526,7 @@ CPython for annotating signatures of built-in functions.)</p>
 
 /// This function adds two unsigned 64-bit integers.
 #[pyfunction]
-#[text_signature = &quot;(a, b, /)&quot;]
+#[pyo3(text_signature = &quot;(a, b, /)&quot;)]
 fn add(a: u64, b: u64) -&gt; u64 {
     a + b
 }
@@ -541,7 +542,7 @@ use pyo3::types::PyType;
 // it works even if the item is not documented:
 
 #[pyclass]
-#[text_signature = &quot;(c, d, /)&quot;]
+#[pyo3(text_signature = &quot;(c, d, /)&quot;)]
 struct MyClass {}
 
 #[pymethods]
@@ -553,17 +554,17 @@ impl MyClass {
         Self {}
     }
     // the self argument should be written $self
-    #[text_signature = &quot;($self, e, f)&quot;]
+    #[pyo3(text_signature = &quot;($self, e, f)&quot;)]
     fn my_method(&amp;self, e: i32, f: i32) -&gt; i32 {
         e + f
     }
     #[classmethod]
-    #[text_signature = &quot;(cls, e, f)&quot;]
+    #[pyo3(text_signature = &quot;(cls, e, f)&quot;)]
     fn my_class_method(cls: &amp;PyType, e: i32, f: i32) -&gt; i32 {
         e + f
     }
     #[staticmethod]
-    #[text_signature = &quot;(e, f)&quot;]
+    #[pyo3(text_signature = &quot;(e, f)&quot;)]
     fn my_static_method(e: i32, f: i32) -&gt; i32 {
         e + f
     }
@@ -576,7 +577,7 @@ impl MyClass {
 <p>Alternatively, simply make sure the first line of your docstring is
 formatted like in the following example. Please note that the newline after the
 <code>--</code> is mandatory. The <code>/</code> signifies the end of positional-only arguments.</p>
-<p><code>#[text_signature]</code> should be preferred, since it will override automatically
+<p><code>#[pyo3(text_signature)]</code> should be preferred, since it will override automatically
 generated signatures when those are added in a future version of PyO3.</p>
 <pre><pre class="playground"><code class="language-rust">
 <span class="boring">#![allow(unused)]
@@ -632,11 +633,11 @@ then use a <code>#[pyclass]</code> struct with that container as a field as a wa
 the FFI barrier. You can even make that class callable with <code>__call__</code> so it looks like a function
 in Python code.</p>
 <h3 id="accessing-the-module-of-a-function"><a class="header" href="#accessing-the-module-of-a-function">Accessing the module of a function</a></h3>
-<p>It is possible to access the module of a <code>#[pyfunction]</code> in the function body by passing the <code>pass_module</code> argument to the attribute:</p>
-<pre><pre class="playground"><code class="language-rust">use pyo3::wrap_pyfunction;
-use pyo3::prelude::*;
+<p>It is possible to access the module of a <code>#[pyfunction]</code> in the function body by using <code>#[pyo3(pass_module)]</code> option:</p>
+<pre><pre class="playground"><code class="language-rust">use pyo3::prelude::*;
 
-#[pyfunction(pass_module)]
+#[pyfunction]
+#[pyo3(pass_module)]
 fn pyfunction_with_module(module: &amp;PyModule) -&gt; PyResult&lt;&amp;str&gt; {
     module.name()
 }
@@ -651,12 +652,11 @@ fn module_with_fn(py: Python, m: &amp;PyModule) -&gt; PyResult&lt;()&gt; {
 <p>If <code>pass_module</code> is set, the first argument <strong>must</strong> be the <code>&amp;PyModule</code>. It is then possible to use the module
 in the function body.</p>
 <h2 id="accessing-the-ffi-functions"><a class="header" href="#accessing-the-ffi-functions">Accessing the FFI functions</a></h2>
-<p>In order to make Rust functions callable from Python, PyO3 generates a
-<code>extern &quot;C&quot; Fn(slf: *mut PyObject, args: *mut PyObject, kwargs: *mut PyObject) -&gt; *mut Pyobject</code>
-function and embeds the call to the Rust function inside this FFI-wrapper function. This
-wrapper handles extraction of the regular arguments and the keyword arguments from the input
-<code>PyObjects</code>. Since this function is not user-defined but required to build a <code>PyCFunction</code>, PyO3
-offers the <code>raw_pycfunction!()</code> macro to get the identifier of this generated wrapper.</p>
+<p>In order to make Rust functions callable from Python, PyO3 generates an <code>extern &quot;C&quot;</code>
+function whose exact signature depends on the Rust signature.  (PyO3 chooses the optimal
+Python argument passing convention.) It then embeds the call to the Rust function inside this
+FFI-wrapper function. This wrapper handles extraction of the regular arguments and the keyword
+arguments from the input <code>PyObject</code>s.</p>
 <p>The <code>wrap_pyfunction</code> macro can be used to directly get a <code>PyCFunction</code> given a
 <code>#[pyfunction]</code> and a <code>PyModule</code>: <code>wrap_pyfunction!(rust_fun, module)</code>.</p>
 <h1 id="python-classes"><a class="header" href="#python-classes">Python Classes</a></h1>
@@ -824,6 +824,25 @@ impl MyClass {
     #[new]
     fn new(num: i32) -&gt; Self {
         MyClass { num }
+    }
+}
+<span class="boring">}
+</span></code></pre></pre>
+<p>Alternatively, if your <code>new</code> method may fail you can return <code>PyResult&lt;Self&gt;</code>.</p>
+<pre><pre class="playground"><code class="language-rust">
+<span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span><span class="boring">use pyo3::prelude::*;
+</span>#[pyclass]
+struct MyClass {
+    num: i32,
+}
+
+#[pymethods]
+impl MyClass {
+    #[new]
+    fn new(num: i32) -&gt; PyResult&lt;Self&gt; {
+        Ok(MyClass { num })
     }
 }
 <span class="boring">}
@@ -997,7 +1016,7 @@ struct MyClass {
 }
 <span class="boring">}
 </span></code></pre></pre>
-<p>The above would make the <code>num</code> property available for reading and writing from Python code as <code>self.num</code>.</p>
+<p>The above would make the <code>num</code> field available for reading and writing as a <code>self.num</code> Python property. To expose the property with a different name to the field, specify this alongside the rest of the options, e.g. <code>#[pyo3(get, set, name = &quot;custom_name&quot;)]</code>.</p>
 <p>Properties can be readonly or writeonly by using just <code>#[pyo3(get)]</code> or <code>#[pyo3(set)]</code> respectively.</p>
 <p>To use these annotations, your field type must implement some conversion traits:</p>
 <ul>
@@ -1357,8 +1376,6 @@ struct MyClass {
     debug: bool,
 }
 
-impl pyo3::pyclass::PyClassAlloc for MyClass {}
-
 unsafe impl pyo3::PyTypeInfo for MyClass {
     type AsRefTarget = PyCell&lt;Self&gt;;
 
@@ -1410,6 +1427,16 @@ impl pyo3::class::impl_::PyClassImpl for MyClass {
         use pyo3::class::impl_::*;
         let collector = PyClassImplCollector::&lt;Self&gt;::new();
         collector.new_impl()
+    }
+    fn get_alloc() -&gt; Option&lt;pyo3::ffi::allocfunc&gt; {
+        use pyo3::class::impl_::*;
+        let collector = PyClassImplCollector::&lt;Self&gt;::new();
+        collector.alloc_impl()
+    }
+    fn get_free() -&gt; Option&lt;pyo3::ffi::freefunc&gt; {
+        use pyo3::class::impl_::*;
+        let collector = PyClassImplCollector::&lt;Self&gt;::new();
+        collector.free_impl()
     }
     fn get_call() -&gt; Option&lt;pyo3::ffi::PyCFunctionWithKeywords&gt; {
         use pyo3::class::impl_::*;
@@ -2912,6 +2939,10 @@ test_word_count_python_sequential                      27.3985 (15.82)    45.452
 <li><code>FromPyObject</code> for <code>Vec</code> and <code>[T;N]</code> can perform a <code>memcpy</code> when the object supports the Python buffer protocol.</li>
 <li><code>ToBorrowedObject</code> can skip a reference count increase when the provided object is a Python native type.</li>
 </ul>
+<h3 id="num-bigint"><a class="header" href="#num-bigint"><code>num-bigint</code></a></h3>
+<p>This feature adds a dependency on <a href="https://docs.rs/num-bigint">num-bigint</a> and enables conversions into its <a href="https://docs.rs/num-bigint/latest/num_bigint/struct.BigInt.html"><code>BigInt</code></a> and <a href="https://docs.rs/num-bigint/latest/num_bigint/struct.BigUInt.html"><code>BigUint</code></a> types.</p>
+<h3 id="num-complex"><a class="header" href="#num-complex"><code>num-complex</code></a></h3>
+<p>This feature adds a dependency on <a href="https://docs.rs/num-complex">num-complex</a> and enables conversions into its <a href="https://docs.rs/num-complex/latest/num_complex/struct.Complex.html"><code>Complex</code></a> type.</p>
 <h3 id="serde"><a class="header" href="#serde"><code>serde</code></a></h3>
 <p>The <code>serde</code> feature enables (de)serialization of Py<T> objects via <a href="https://serde.rs/">serde</a>.
 This allows to use <a href="https://serde.rs/derive.html"><code>#[derive(Serialize, Deserialize)</code></a> on structs that hold references to <code>#[pyclass]</code> instances</p>
@@ -2969,11 +3000,11 @@ pyo3 = { git = &quot;https://github.com/pyo3/pyo3&quot; }
 <h2 id="testing-building-and-distribution"><a class="header" href="#testing-building-and-distribution">Testing, building and distribution</a></h2>
 <p>There are two main ways to test, build and distribute your module as a Python package: <a href="https://github.com/PyO3/setuptools-rust">setuptools-rust</a> and <a href="https://github.com/PyO3/maturin">maturin</a>. setuptools-rust needs several configuration files (<code>setup.py</code>, <code>MANIFEST.in</code>, <code>build-wheels.sh</code>, etc.). It allows (and sometimes requires) writing custom workflows in python. maturin has only few options and works without any additional configuration, instead it requires a rigid project structure and does not support some functionality of setuptools such as package data (<a href="https://github.com/PyO3/maturin/issues/258">pyo3/maturin#258</a>), multiple extensions or running python scripts at build time.</p>
 <h3 id="manual-builds"><a class="header" href="#manual-builds">Manual builds</a></h3>
-<p>You can also symlink (or copy) and rename the shared library from the <code>target</code> folder: </p>
+<p>You can also symlink (or copy) and rename the shared library from the <code>target</code> folder:</p>
 <ul>
 <li>on macOS, rename <code>libyour_module.dylib</code> to <code>your_module.so</code>.</li>
 <li>on Windows, rename  <code>libyour_module.dll</code> to <code>your_module.pyd</code>.</li>
-<li>on Linux, rename <code>libyour_module.so</code> to <code>your_module.so</code>. </li>
+<li>on Linux, rename <code>libyour_module.so</code> to <code>your_module.so</code>.</li>
 </ul>
 <p>You can then open a Python shell in the same folder and you'll be able to use <code>import your_module</code>.</p>
 <h2 id="py_limited_apiabi3"><a class="header" href="#py_limited_apiabi3"><code>Py_LIMITED_API</code>/<code>abi3</code></a></h2>
@@ -3008,7 +3039,7 @@ For example, if you set the <code>abi3-py36</code> feature, your extension wheel
 <p>Due to limitations in the Python API, there are a few <code>pyo3</code> features that do
 not work when compiling for <code>abi3</code>. These are:</p>
 <ul>
-<li><code>#[text_signature]</code> does not work on classes until Python 3.10 or greater.</li>
+<li><code>#[pyo3(text_signature = &quot;...&quot;)]</code> does not work on classes until Python 3.10 or greater.</li>
 <li>The <code>dict</code> and <code>weakref</code> options on classes are not supported until Python 3.9 or greater.</li>
 <li>The buffer API is not supported.</li>
 <li>Optimizations which rely on knowledge of the exact Python version compiled against.</li>
@@ -3176,7 +3207,6 @@ It's also possible to tweak its configuration (mostly to tune its performance).<
 </span><span class="boring">fn main() {
 </span>use log::info;
 use pyo3::prelude::*;
-use pyo3::wrap_pyfunction;
 
 #[pyfunction]
 fn log_something() {
@@ -3469,20 +3499,96 @@ default = [&quot;extension-module&quot;]
 <p>The Rust book suggests to <a href="https://doc.rust-lang.org/book/ch11-03-test-organization.html#integration-tests">put integration tests inside a <code>tests/</code> directory</a>.</p>
 <p>For a PyO3 <code>extension-module</code> project where the <code>crate-type</code> is set to <code>&quot;cdylib&quot;</code> in your <code>Cargo.toml</code>,
 the compiler won't be able to find your crate and will display errors such as <code>E0432</code> or <code>E0463</code>:</p>
-<pre><code>error[E0432]: unresolved import `my_crate`
+<pre><code class="language-text">error[E0432]: unresolved import `my_crate`
  --&gt; tests/test_my_crate.rs:1:5
   |
 1 | use my_crate;
   |     ^^^^^^^^^^^^ no external crate `my_crate`
 </code></pre>
 <p>The best solution is to make your crate types include both <code>rlib</code> and <code>cdylib</code>:</p>
-<pre><code># Cargo.toml
+<pre><code class="language-toml"># Cargo.toml
 [lib]
 crate-type = [&quot;cdylib&quot;, &quot;rlib&quot;]
 </code></pre>
 <h2 id="ctrl-c-doesnt-do-anything-while-my-rust-code-is-executing"><a class="header" href="#ctrl-c-doesnt-do-anything-while-my-rust-code-is-executing">Ctrl-C doesn't do anything while my Rust code is executing!</a></h2>
 <p>This is because Ctrl-C raises a SIGINT signal, which is handled by the calling Python process by simply setting a flag to action upon later. This flag isn't checked while Rust code called from Python is executing, only once control returns to the Python interpreter.</p>
 <p>You can give the Python interpreter a chance to process the signal properly by calling <code>Python::check_signals</code>. It's good practice to call this function regularly if you have a long-running Rust function so that your users can cancel it.</p>
+<h2 id="pyo3get-clones-my-field"><a class="header" href="#pyo3get-clones-my-field"><code>#[pyo3(get)]</code> clones my field!</a></h2>
+<p>You may have a nested struct similar to this:</p>
+<pre><pre class="playground"><code class="language-rust">
+<span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span><span class="boring">use pyo3::prelude::*;
+</span>#[pyclass]
+#[derive(Clone)]
+struct Inner { /* fields omitted */ }
+
+#[pyclass]
+struct Outer {
+    #[pyo3(get)]
+    inner: Inner,
+}
+
+#[pymethods]
+impl Outer {
+    #[new]
+    fn __new__() -&gt; Self {
+        Self { inner: Inner {} }
+    }
+}
+<span class="boring">}
+</span></code></pre></pre>
+<p>When Python code accesses <code>Outer</code>'s field, PyO3 will return a new object on every access (note that their addresses are different):</p>
+<pre><code class="language-python">outer = Outer()
+
+a = outer.inner
+b = outer.inner
+
+assert a is b, f&quot;a: {a}\nb: {b}&quot;
+</code></pre>
+<pre><code class="language-text">AssertionError: a: &lt;builtins.Inner object at 0x00000238FFB9C7B0&gt;
+b: &lt;builtins.Inner object at 0x00000238FFB9C830&gt;
+</code></pre>
+<p>This can be especially confusing if the field is mutable, as getting the field and then mutating it won't persist - you'll just get a fresh clone of the original on the next access. Unfortunately Python and Rust don't agree about ownership - if PyO3 gave out references to (possibly) temporary Rust objects to Python code, Python code could then keep that reference alive indefinitely. Therefore returning Rust objects requires cloning.</p>
+<p>If you don't want that cloning to happen, a workaround is to allocate the field on the Python heap and store a reference to that, by using <a href="https://pyo3.rs/main/doc/pyo3/struct.Py.html"><code>Py&lt;...&gt;</code></a>:</p>
+<pre><pre class="playground"><code class="language-rust">
+<span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span><span class="boring">use pyo3::prelude::*;
+</span>#[pyclass]
+#[derive(Clone)]
+struct Inner { /* fields omitted */ }
+
+#[pyclass]
+struct Outer {
+    #[pyo3(get)]
+    inner: Py&lt;Inner&gt;,
+}
+
+#[pymethods]
+impl Outer {
+    #[new]
+    fn __new__(py: Python) -&gt; PyResult&lt;Self&gt; {
+        Ok(Self {
+            inner: Py::new(py, Inner {})?,
+        })
+    }
+}
+<span class="boring">}
+</span></code></pre></pre>
+<p>This time <code>a</code> and <code>b</code> <em>are</em> the same object:</p>
+<pre><code class="language-python">outer = Outer()
+
+a = outer.inner
+b = outer.inner
+
+assert a is b, f&quot;a: {a}\nb: {b}&quot;
+print(f&quot;a: {a}\nb: {b}&quot;)
+</code></pre>
+<pre><code class="language-text">a: &lt;builtins.Inner object at 0x0000020044FCC670&gt;
+b: &lt;builtins.Inner object at 0x0000020044FCC670&gt;
+</code></pre>
+<p>The downside to this approach is that any Rust code working on the <code>Outer</code> struct now has to acquire the GIL to do anything with its field. </p>
 <h1 id="migrating-from-older-pyo3-versions"><a class="header" href="#migrating-from-older-pyo3-versions">Migrating from older PyO3 versions</a></h1>
 <p>This guide can help you upgrade code through breaking changes from one PyO3 version to the next.
 For a detailed list of all changes, see the <a href="changelog.html">CHANGELOG</a>.</p>
@@ -4484,7 +4590,6 @@ Because of this, we can write a function wrapper that takes the <code>UserModel<
 <span class="boring">#![allow(unused)]
 </span><span class="boring">fn main() {
 </span>use pyo3::prelude::*;
-use pyo3::wrap_pyfunction;
 use pyo3::types::PyAny;
 
 pub trait Model {
@@ -4591,6 +4696,7 @@ and this project adheres to <a href="http://semver.org/spec/v2.0.0.html">Semanti
 <li>Update <code>num-complex</code> optional dependency to 0.4. <a href="https://github.com/PyO3/pyo3/pull/1482">#1482</a></li>
 <li>Extend <code>hashbrown</code> optional dependency supported versions to include 0.11. <a href="https://github.com/PyO3/pyo3/pull/1496">#1496</a></li>
 <li>Support PyPy 3.7. <a href="https://github.com/PyO3/pyo3/pull/1538">#1538</a></li>
+<li>Try harder to filter sysconfigdata candidates on arch.config</li>
 </ul>
 <h3 id="added"><a class="header" href="#added">Added</a></h3>
 <ul>
@@ -4605,6 +4711,11 @@ and this project adheres to <a href="http://semver.org/spec/v2.0.0.html">Semanti
 <li>Add <code>#[pyo3(name = &quot;...&quot;)]</code> syntax for setting Python names. <a href="https://github.com/PyO3/pyo3/pull/1567">#1567</a></li>
 <li>Add FFI definition <code>PyDateTime_TimeZone_UTC</code>. <a href="https://github.com/PyO3/pyo3/pull/1572">#1572</a></li>
 <li>Add support for <code>#[pyclass(extends=Exception)]</code>. <a href="https://github.com/PyO3/pyo3/pull/1591">#1591</a></li>
+<li>Add support for extracting <code>PathBuf</code> from <code>pathlib.Path</code>. <a href="https://github.com/PyO3/pyo3/pull/1654">#1654</a></li>
+<li>Add <code>#[pyo3(text_signature = &quot;...&quot;)]</code> syntax for setting text signature. <a href="https://github.com/PyO3/pyo3/pull/1658">#1658</a></li>
+<li>Add support for setting and retrieving exception cause. <a href="https://github.com/PyO3/pyo3/pull/1679">#1679</a></li>
+<li>Add FFI definitions from <code>cpython/pystate.h</code>.<a href="https://github.com/PyO3/pyo3/pull/1687/">#1687</a></li>
+<li>Add <code>wrap_pyfunction</code> macro to prelude. <a href="https://github.com/PyO3/pyo3/pull/1695">#1695</a></li>
 </ul>
 <h3 id="changed"><a class="header" href="#changed">Changed</a></h3>
 <ul>
@@ -4631,6 +4742,11 @@ and this project adheres to <a href="http://semver.org/spec/v2.0.0.html">Semanti
 <li>Reduce LLVM line counts to improve compilation times. <a href="https://github.com/PyO3/pyo3/pull/1604">#1604</a></li>
 <li>Deprecate string-literal second argument to <code>#[pyfn(m, &quot;name&quot;)]</code>. <a href="https://github.com/PyO3/pyo3/pull/1610">#1610</a></li>
 <li>No longer call <code>PyEval_InitThreads()</code> in <code>#[pymodule]</code> init code. <a href="https://github.com/PyO3/pyo3/pull/1630">#1630</a></li>
+<li>Deprecate <code>#[pymodule(name)]</code> option in favor of <code>#[pyo3(name = &quot;...&quot;)]</code>. <a href="https://github.com/PyO3/pyo3/pull/1650">#1650</a></li>
+<li>Deprecate <code>#[text_signature = &quot;...&quot;]</code> attributes in favor of <code>#[pyo3(text_signature = &quot;...&quot;)]</code>. <a href="https://github.com/PyO3/pyo3/pull/1658">#1658</a></li>
+<li>Use <code>METH_FASTCALL</code> argument passing convention, when possible, to improve <code>#[pyfunction]</code> and method performance.
+<a href="https://github.com/PyO3/pyo3/pull/1619">#1619</a>, <a href="https://github.com/PyO3/pyo3/pull/1660">#1660</a></li>
+<li>Make the <code>Py_tracefunc</code> parameter of the <code>PyEval_SetProfile</code>/<code>PyEval_SetTrace</code> functions optional. <a href="https://github.com/PyO3/pyo3/pull/1692">#1692</a></li>
 </ul>
 <h3 id="removed"><a class="header" href="#removed">Removed</a></h3>
 <ul>
@@ -4653,6 +4769,10 @@ and this project adheres to <a href="http://semver.org/spec/v2.0.0.html">Semanti
 </li>
 <li>Remove <code>__doc__</code> from module's <code>__all__</code>. <a href="https://github.com/PyO3/pyo3/pull/1509">#1509</a></li>
 <li>Remove <code>PYO3_CROSS_INCLUDE_DIR</code> environment variable and the associated C header parsing functionality. <a href="https://github.com/PyO3/pyo3/pull/1521">#1521</a></li>
+<li>Remove <code>raw_pycfunction!</code> macro. <a href="https://github.com/PyO3/pyo3/pull/1619">#1619</a></li>
+<li>Remove <code>PyClassAlloc</code> trait. <a href="https://github.com/PyO3/pyo3/pull/1657">#1657</a></li>
+<li>Remove <code>PyList::get_parked_item</code>. <a href="https://github.com/PyO3/pyo3/pull/1664">#1664</a></li>
+<li>Remove the layout of the ffi/ffi::cpython module from the public api <a href="https://github.com/PyO3/pyo3/pull/1687/">#1687</a>. If you were importing things with <code>pyo3::ffi::&lt;module&gt;::&lt;item&gt;;</code>, please use <code>pyo3::ffi::&lt;item&gt;;</code> instead</li>
 </ul>
 <h3 id="fixed"><a class="header" href="#fixed">Fixed</a></h3>
 <ul>
@@ -4669,6 +4789,8 @@ and this project adheres to <a href="http://semver.org/spec/v2.0.0.html">Semanti
 <li>Fix unneccessary rebuilds when cycling between <code>cargo check</code> and <code>cargo clippy</code> in a Python virtualenv. <a href="https://github.com/PyO3/pyo3/pull/1557">#1557</a></li>
 <li>Fix segfault when dereferencing <code>ffi::PyDateTimeAPI</code> without the GIL. <a href="https://github.com/PyO3/pyo3/pull/1563">#1563</a></li>
 <li>Fix memory leak when converting to u128 and i128. <a href="https://github.com/PyO3/pyo3/pull/1638">#1638</a></li>
+<li>Fix <code>#[pyclass(extends=PyDict)]</code> leaking the dict contents on drop. <a href="https://github.com/PyO3/pyo3/pull/1657">#1657</a></li>
+<li>Fix segfault when calling <code>PyList::get_item</code> with negative indices. <a href="https://github.com/PyO3/pyo3/pull/1668">#1668</a></li>
 </ul>
 <h2 id="a-hrefhttpsgithubcompyo3pyo3comparev0131v01320132a---2021-02-12"><a class="header" href="#a-hrefhttpsgithubcompyo3pyo3comparev0131v01320132a---2021-02-12"><a href="https://github.com/pyo3/pyo3/compare/v0.13.1...v0.13.2">0.13.2</a> - 2021-02-12</a></h2>
 <h3 id="packaging-1"><a class="header" href="#packaging-1">Packaging</a></h3>
@@ -4677,7 +4799,7 @@ and this project adheres to <a href="http://semver.org/spec/v2.0.0.html">Semanti
 </ul>
 <h3 id="added-1"><a class="header" href="#added-1">Added</a></h3>
 <ul>
-<li>Add unsafe API <code>with_embedded_python_interpreter</code> to  initalize a Python interpreter, execute a closure, and finalize the interpreter. <a href="https://github.com/PyO3/pyo3/pull/1355">#1355</a></li>
+<li>Add unsafe API <code>with_embedded_python_interpreter</code> to initalize a Python interpreter, execute a closure, and finalize the interpreter. <a href="https://github.com/PyO3/pyo3/pull/1355">#1355</a></li>
 <li>Add <code>serde</code> feature which provides implementations of <code>Serialize</code> and <code>Deserialize</code> for <code>Py&lt;T&gt;</code>. <a href="https://github.com/PyO3/pyo3/pull/1366">#1366</a></li>
 <li>Add FFI definition <code>_PyCFunctionFastWithKeywords</code> on Python 3.7 and up. <a href="https://github.com/PyO3/pyo3/pull/1384">#1384</a></li>
 <li>Add <code>PyDateTime::new_with_fold()</code> method. <a href="https://github.com/PyO3/pyo3/pull/1398">#1398</a></li>
@@ -4883,7 +5005,7 @@ and this project adheres to <a href="http://semver.org/spec/v2.0.0.html">Semanti
 <li>Fix many cases of lifetime elision in <code>#[pyproto]</code> implementations. <a href="https://github.com/PyO3/pyo3/pull/1093">#1093</a></li>
 <li>Fix detection of Python build configuration when cross-compiling. <a href="https://github.com/PyO3/pyo3/pull/1095">#1095</a></li>
 <li>Always link against libpython on android with the <code>extension-module</code> feature. <a href="https://github.com/PyO3/pyo3/pull/1095">#1095</a></li>
-<li>Fix the <code>+</code> operator not trying <code>__radd__</code> when both <code>__add__</code> and <code>__radd__</code>  are defined in <code>PyNumberProtocol</code> (and similar for all other reversible operators). <a href="https://github.com/PyO3/pyo3/pull/1107">#1107</a></li>
+<li>Fix the <code>+</code> operator not trying <code>__radd__</code> when both <code>__add__</code> and <code>__radd__</code> are defined in <code>PyNumberProtocol</code> (and similar for all other reversible operators). <a href="https://github.com/PyO3/pyo3/pull/1107">#1107</a></li>
 <li>Fix building with Anaconda python. <a href="https://github.com/PyO3/pyo3/pull/1175">#1175</a></li>
 </ul>
 <h2 id="a-hrefhttpsgithubcompyo3pyo3comparev0110v01110111a---2020-06-30"><a class="header" href="#a-hrefhttpsgithubcompyo3pyo3comparev0110v01110111a---2020-06-30"><a href="https://github.com/pyo3/pyo3/compare/v0.11.0...v0.11.1">0.11.1</a> - 2020-06-30</a></h2>
